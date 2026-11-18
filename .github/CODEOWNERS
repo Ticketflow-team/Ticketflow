@@ -1,0 +1,7 @@
+*                         @ORG/ticketflow-team
+/.github/                 @PSEUDO-C
+/src/TicketFlow.Api/      @PSEUDO-A @PSEUDO-B
+/src/TicketFlow.Domain/   @PSEUDO-A
+/src/TicketFlow.Guardian/ @PSEUDO-C
+/policies/                @PSEUDO-C
+/tests/ai-redteam/        @PSEUDO-D
