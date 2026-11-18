@@ -1,0 +1,73 @@
+# X5 — Infrastructure de développement locale
+# Démarre : PostgreSQL 16 · Valkey 8 · Keycloak 26
+# Usage : docker compose -f docker-compose.dev.yml up -d
+# Prérequis : copier .env.example → .env et remplir les valeurs
+
+name: ticketflow-dev
+
+services:
+
+  # ── Base de données applicative ──────────────────────────────────────────────
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ticketflow
+      POSTGRES_USER: ${PG_USER}
+      POSTGRES_PASSWORD: ${PG_PASSWORD}
+    ports:
+      - "127.0.0.1:5432:5432"   # écoute locale uniquement (T12 / infosec)
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./infra/init-db.sql:/docker-entrypoint-initdb.d/10-init.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${PG_USER} -d ticketflow"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+
+  # ── Cache / rate-limiting / denylist jti ────────────────────────────────────
+  cache:
+    image: valkey/valkey:8-alpine
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:6379:6379"
+    healthcheck:
+      test: ["CMD", "valkey-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  # ── IdP : OIDC / OAuth 2.1 / passkeys (X6 → Étudiant B) ────────────────────
+  keycloak:
+    image: quay.io/keycloak/keycloak:26.0
+    restart: unless-stopped
+    # start-dev = pas de TLS interne (reverse-proxy gère TLS en prod)
+    command: >
+      start-dev
+      --db postgres
+      --db-url-host postgres
+      --db-url-database keycloak
+      --db-username ${PG_USER}
+      --db-password ${KC_DB_PASSWORD}
+      --hostname-strict false
+      --http-enabled true
+    environment:
+      KC_BOOTSTRAP_ADMIN_USERNAME: ${KC_ADMIN}
+      KC_BOOTSTRAP_ADMIN_PASSWORD: ${KC_ADMIN_PASSWORD}
+    ports:
+      - "127.0.0.1:8080:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fs http://localhost:8080/health/ready || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 15
+      start_period: 30s
+
+volumes:
+  postgres_data:
+    driver: local
