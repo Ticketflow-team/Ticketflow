@@ -1,0 +1,17 @@
+root = true
+
+[*]
+charset = utf-8
+indent_style = space
+indent_size = 4
+end_of_line = lf
+insert_final_newline = true
+trim_trailing_whitespace = true
+
+[*.cs]
+dotnet_diagnostic.severity = warning
+
+# Projets de test : l'underscore est la convention standard des noms de tests
+# (Methode_Scenario_Resultat). On desactive CA1707 uniquement ici, pas sur src/.
+[tests/**/*.cs]
+dotnet_diagnostic.CA1707.severity = none
