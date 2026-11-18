@@ -1,13 +1,8 @@
-# X5 — Infrastructure de développement locale
-# Démarre : PostgreSQL 16 · Valkey 8 · Keycloak 26
-# Usage : docker compose -f docker-compose.dev.yml up -d
-# Prérequis : copier .env.example → .env et remplir les valeurs
-
 name: ticketflow-dev
 
 services:
 
-  # ── Base de données applicative ──────────────────────────────────────────────
+  # ── Base de donnees applicative ──────────────────────────────────────────────
   postgres:
     image: postgres:16-alpine
     restart: unless-stopped
@@ -16,7 +11,7 @@ services:
       POSTGRES_USER: ${PG_USER}
       POSTGRES_PASSWORD: ${PG_PASSWORD}
     ports:
-      - "127.0.0.1:5432:5432"   # écoute locale uniquement (T12 / infosec)
+      - "127.0.0.1:5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
       - ./infra/init-db.sql:/docker-entrypoint-initdb.d/10-init.sql:ro
@@ -39,18 +34,19 @@ services:
       timeout: 3s
       retries: 5
 
-  # ── IdP : OIDC / OAuth 2.1 / passkeys (X6 → Étudiant B) ────────────────────
+  # ── IdP : OIDC / OAuth 2.1 / passkeys (X6 -> Etudiant B) ───────────────────
+  # Keycloak se connecte a PostgreSQL avec le meme user/password que l'app.
+  # La base "keycloak" est creee par infra/init-db.sql au premier demarrage.
   keycloak:
     image: quay.io/keycloak/keycloak:26.0
     restart: unless-stopped
-    # start-dev = pas de TLS interne (reverse-proxy gère TLS en prod)
     command: >
       start-dev
       --db postgres
       --db-url-host postgres
       --db-url-database keycloak
       --db-username ${PG_USER}
-      --db-password ${KC_DB_PASSWORD}
+      --db-password ${PG_PASSWORD}
       --hostname-strict false
       --http-enabled true
     environment:
