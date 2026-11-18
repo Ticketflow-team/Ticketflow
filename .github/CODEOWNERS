@@ -1,7 +1,7 @@
-*                         @ORG/ticketflow-team
-/.github/                 @PSEUDO-C
-/src/TicketFlow.Api/      @PSEUDO-A @PSEUDO-B
-/src/TicketFlow.Domain/   @PSEUDO-A
-/src/TicketFlow.Guardian/ @PSEUDO-C
-/policies/                @PSEUDO-C
-/tests/ai-redteam/        @PSEUDO-D
+*                           @Ticketflow-team/code-owners
+/.github/                   @someone2042
+/src/TicketFlow.Api/        @0xRizki @Mouad-sk
+/src/TicketFlow.Domain/     @0xRizki
+/src/TicketFlow.Guardian/   @someone2042
+/policies/                  @someone2042
+/tests/ai-redteam/          @Amine-iD
