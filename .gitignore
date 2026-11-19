@@ -484,3 +484,8 @@ $RECYCLE.BIN/
 keycloak/ticketflow-realm.json
 # Local DefectDojo upstream clone and environment
 defectdojo/
+
+# Threat model (pytm) — generated artefacts and local venv
+threat-model/out/
+threat-model/__pycache__/
+.venv-tm/
