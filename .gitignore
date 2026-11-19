@@ -482,3 +482,5 @@ $RECYCLE.BIN/
 *.swp
 # Keycloak realm exports
 keycloak/ticketflow-realm.json
+# Local DefectDojo upstream clone and environment
+defectdojo/
