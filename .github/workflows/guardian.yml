@@ -72,9 +72,9 @@ jobs:
       id-token: write   # Requis pour demander le jeton JWT OIDC
       contents: read
     steps:
-      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683      # v4.2.2
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683        # v4.2.2
       - name: Azure login via OIDC (Zero Secret!)
-        uses: azure/login@79331080a95b130c849f834e7b57a55e675e7863            # v2.2.0
+        uses: azure/login@7184910d9eb2b1c5e48f7073824a90609bb9b6d6            # v2.3.1
         with:
           client-id: ${{ vars.AZURE_CLIENT_ID }}
           tenant-id: ${{ vars.AZURE_TENANT_ID }}
