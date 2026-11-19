@@ -1,4 +1,4 @@
-# TicketFlow Guardian 🛡️🎫
+# TicketFlow
 
 Plateforme de billetterie ASP.NET Core securisee par une pipeline DevSecOps
 augmentee par IA (risk-based gates : EPSS · CISA KEV · atteignabilite · VEX).
