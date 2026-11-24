@@ -4,17 +4,36 @@ on:
   push:
     branches: [main]
 
-# P5 — moindre privilege : toutes les permissions read-only par defaut (T20)
-permissions: read-all
+# P5 — moindre privilege : lecture seule du code par defaut (T20)
+permissions:
+  contents: read
 
 jobs:
+  # ── P5 : Audit de securite du workflow (zizmor + actionlint) ────────────────
+  workflow-audit:
+    name: Workflow Security Audit (zizmor & actionlint)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683        # v4.2.2
+        with:
+          persist-credentials: false
+      - name: Install and run actionlint
+        run: |
+          bash <(curl -s https://raw.githubusercontent.com/rhysd/actionlint/main/scripts/download-actionlint.bash)
+          ./actionlint -color
+      - name: Install and run zizmor
+        run: |
+          pipx install zizmor
+          zizmor .github/workflows/
+
   # ── P4 : Build + Tests ──────────────────────────────────────────────────────
   build-test:
     name: Build & Test
     runs-on: ubuntu-latest
     steps:
-      # Actions pinnees par SHA — jamais par tag (P5 / T20)
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683        # v4.2.2
+        with:
+          persist-credentials: false
       - uses: actions/setup-dotnet@3951f0dfe7a07e2313ec93c75700083e2005cbab    # v4.3.0
         with:
           dotnet-version: "10.0.x"
@@ -33,6 +52,7 @@ jobs:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683        # v4.2.2
         with:
           fetch-depth: 0
+          persist-credentials: false
       - name: Install Gitleaks (standalone open-source CLI)
         run: |
           curl -sSL https://github.com/gitleaks/gitleaks/releases/download/v8.24.0/gitleaks_8.24.0_linux_x64.tar.gz | sudo tar -xz -C /usr/local/bin gitleaks
@@ -45,6 +65,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683        # v4.2.2
+        with:
+          persist-credentials: false
       - uses: actions/setup-dotnet@3951f0dfe7a07e2313ec93c75700083e2005cbab    # v4.3.0
         with:
           dotnet-version: "10.0.x"
@@ -63,7 +85,8 @@ jobs:
         with:
           name: sca-report
           path: sca-report.txt
-# ── X8 : Test de connexion Azure via OIDC (Zero Secret — T20) ───────────────
+
+  # ── X8 : Test de connexion Azure via OIDC (Zero Secret — T20) ───────────────
   cloud-auth-test:
     name: Test Azure OIDC Login
     runs-on: ubuntu-latest
@@ -73,6 +96,8 @@ jobs:
       contents: read
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683        # v4.2.2
+        with:
+          persist-credentials: false
       - name: Azure login via OIDC (Zero Secret!)
         uses: azure/login@7184910d9eb2b1c5e48f7073824a90609bb9b6d6            # v2.3.1
         with:
