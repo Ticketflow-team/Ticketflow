@@ -1,0 +1,14 @@
+directory:
+  - infra
+framework:
+  - terraform
+  - kubernetes
+compact: true
+output:
+  - cli
+  - json
+  - sarif
+output-file-path:
+  - console
+  - checkov.json
+  - checkov.sarif
