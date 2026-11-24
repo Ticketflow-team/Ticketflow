@@ -12,3 +12,31 @@ output-file-path:
   - console
   - checkov.json
   - checkov.sarif
+
+# ── Skip rules: production-only infrastructure not available in Azure for Students ──
+# Each skipped check is documented below with its CKV ID, description and reason.
+skip-check:
+  # Key Vault
+  - CKV_AZURE_109   # Ensure private endpoint is configured to Key Vault
+                    # Reason: Private endpoints require VNet injection — not supported
+                    # in Azure for Students (d2dab59f). network_acls deny covers access.
+
+  # ACR
+  - CKV_AZURE_164   # Ensure ACR is zone redundant
+                    # Reason: Zone redundancy requires Premium SKU + production subscription
+                    # quota not available in Azure for Students.
+  - CKV_AZURE_165   # Ensure geo-replicated container registries match multi-region deployments
+                    # Reason: Single-region student demo environment; geo-replication not needed.
+
+  # App Service Plan
+  - CKV_AZURE_172   # Ensure App Service Plan is zone redundant
+                    # Reason: Zone balancing requires production subscription quota;
+                    # student subscription quota is 0 for zone-redundant ASP.
+  - CKV_AZURE_225   # Ensure App Service has minimum instances for failover
+                    # Reason: Scaling out requires higher quota than Azure for Students allows.
+
+  # App Service
+  - CKV_AZURE_222   # Ensure Azure Web App public network access is disabled
+                    # Reason: Disabling public access requires a private endpoint in the VNet;
+                    # student subscription does not support private endpoint injection.
+                    # Mitigation: https_only=true, TLS 1.2 minimum, client certs enforced.
