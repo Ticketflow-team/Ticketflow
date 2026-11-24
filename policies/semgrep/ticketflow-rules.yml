@@ -1,0 +1,70 @@
+rules:
+  # ── Règle 1 : Injection SQL via FromSqlRaw / ExecuteSqlRaw interpolé (T01 / A05) ──
+  - id: csharp-efcore-sqli-interpolated-fromsqlraw
+    languages: [csharp]
+    message: >-
+      [CRITICAL] Injection SQL potentielle : N'utilisez jamais d'interpolation de chaîne ($"...") dans FromSqlRaw, ExecuteSqlRaw ou ExecuteSqlRawAsync.
+      Utilisez des requêtes paramétrées avec FromSql(...) ou passez les paramètres explicitement via des objets DbParameter.
+    severity: ERROR
+    metadata:
+      category: security
+      cwe: "CWE-89: Improper Neutralization of Special Elements used in an SQL Command ('SQL Injection')"
+      owasp: "A03:2021 - Injection / A05:2025 - Injection"
+      threat: "T01"
+      confidence: HIGH
+    patterns:
+      - pattern-either:
+          - pattern: $DB.FromSqlRaw($"...", ...)
+          - pattern: $SET.FromSqlRaw($"...", ...)
+          - pattern: $DB.ExecuteSqlRaw($"...", ...)
+          - pattern: $DB.ExecuteSqlRawAsync($"...", ...)
+          - pattern: $FACADE.ExecuteSqlRaw($"...", ...)
+          - pattern: $FACADE.ExecuteSqlRawAsync($"...", ...)
+
+  # ── Règle 2 : Exposition directe d'entités du domaine EF Core (T11 / A01) ──────────
+  - id: csharp-api-direct-ef-entity-exposure
+    languages: [csharp]
+    message: >-
+      [WARNING] Fuite de données / Exposition excessive : Évitez de renvoyer directement une entité du domaine EF Core depuis un endpoint HTTP.
+      Utilisez un DTO (Data Transfer Object) de sortie dédié pour éviter le Mass Assignment et l'exposition involontaire de données sensibles (PII).
+    severity: WARNING
+    metadata:
+      category: security
+      cwe: "CWE-200: Exposure of Sensitive Information to an Unauthorized Actor"
+      owasp: "A01:2025 - Broken Access Control"
+      threat: "T11"
+      confidence: MEDIUM
+    patterns:
+      - pattern-either:
+          - pattern: |
+              $APP.$METHOD($ROUTE, (..., $DB, ...) => {
+                ...
+                return $DB.$SET. ... ;
+              })
+          - pattern: |
+              $APP.$METHOD($ROUTE, async (..., $DB, ...) => {
+                ...
+                return await $DB.$SET. ... ;
+              })
+      - metavariable-regex:
+          metavariable: $METHOD
+          regex: ^(MapGet|MapPost|MapPut|MapDelete|MapPatch)$
+
+  # ── Règle 3 : Endpoint /admin avec AllowAnonymous interdit (T09 / A01) ─────────────
+  - id: csharp-admin-endpoint-allow-anonymous
+    languages: [csharp]
+    message: >-
+      [CRITICAL] Défaut d'autorisation fonctionnelle (BFLA) : Les routes administratives (/admin) ne doivent jamais autoriser l'accès anonyme.
+      Supprimez AllowAnonymous et appliquez une politique d'autorisation stricte (ex: RequireAuthorization("AdminPolicy")).
+    severity: ERROR
+    metadata:
+      category: security
+      cwe: "CWE-306: Missing Authentication for Critical Function"
+      owasp: "A01:2025 - Broken Access Control"
+      threat: "T09"
+      confidence: HIGH
+    patterns:
+      - pattern: $APP.$METHOD($ROUTE, ...).AllowAnonymous(...)
+      - metavariable-regex:
+          metavariable: $ROUTE
+          regex: .*admin.*
