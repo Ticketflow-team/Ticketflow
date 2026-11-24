@@ -271,11 +271,52 @@ jobs:
             checkov.sarif
             checkov.json
 
+  # ── P14 : Risk Gate OPA / Conftest (Décision basée sur le risque — T13 / T20 / CRA) ──
+  risk-gate:
+    name: Risk Gate (OPA & Conftest)
+    runs-on: ubuntu-latest
+    needs: [sca, image]
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683        # v4.2.2
+        with:
+          persist-credentials: false
+      - name: Download enriched findings artifact
+        uses: actions/download-artifact@cc203385981b70ca67e1cc392babf9cc229d5806  # v4.1.9
+        with:
+          name: findings-enriched
+          path: .
+      - name: Download container scan reports artifact
+        uses: actions/download-artifact@cc203385981b70ca67e1cc392babf9cc229d5806  # v4.1.9
+        with:
+          name: container-image-reports
+          path: .
+      - name: Install Conftest (Open Policy Agent CLI)
+        run: |
+          curl -sSL https://github.com/open-policy-agent/conftest/releases/download/v0.71.1/conftest_0.71.1_Linux_x86_64.tar.gz | sudo tar -xz -C /usr/local/bin conftest
+          chmod +x /usr/local/bin/conftest
+          conftest --version
+      - name: Verify Rego policy unit tests
+        run: |
+          conftest verify --policy policies/gate/
+      - name: Evaluate Risk Gate policy
+        run: |
+          files=("findings.enriched.json")
+          if [ -f trivy-image.json ]; then
+            files+=("trivy-image.json")
+          fi
+          echo "Evaluating files: ${files[*]}"
+          conftest test "${files[@]}" \
+            --policy policies/gate/ \
+            --data policies/vex/vex.openvex.json \
+            --namespace guardian.gate
+
   # ── X8 : Test de connexion Azure via OIDC (Zero Secret — T20) ───────────────
   cloud-auth-test:
     name: Test Azure OIDC Login
     runs-on: ubuntu-latest
-    needs: [build-test, secrets, sca, image, sbom, iac]
+    needs: [build-test, secrets, sca, image, sbom, iac, risk-gate]
     permissions:
       id-token: write   # Requis pour demander le jeton JWT OIDC
       contents: read

@@ -1,0 +1,26 @@
+{
+  "@context": "https://openvex.dev/ns/v0.2.0",
+  "@id": "https://github.com/Ticketflow-team/Ticketflow/vex/2026-01",
+  "author": "TicketFlow Security Champion <security@ticketflow.example>",
+  "timestamp": "2026-01-01T00:00:00Z",
+  "version": 1,
+  "statements": [
+    {
+      "vulnerability": {
+        "id": "CVE-0000-00000",
+        "name": "CVE-0000-00000",
+        "description": "Baseline exemption placeholder — replace with real CVE IDs when VEX justifications are registered"
+      },
+      "products": [
+        {
+          "@id": "pkg:oci/ticketflow-api",
+          "subcomponents": []
+        }
+      ],
+      "status": "not_affected",
+      "justification": "vulnerable_code_not_present",
+      "impact_statement": "This CVE does not affect TicketFlow because the vulnerable code path is not compiled into the final image.",
+      "action_statement": "Review quarterly during security sprint compliance audit."
+    }
+  ]
+}
