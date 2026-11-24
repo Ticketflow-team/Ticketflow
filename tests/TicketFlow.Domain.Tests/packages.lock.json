@@ -101,6 +101,9 @@
       },
       "ticketflow.domain": {
         "type": "Project"
+      },
+      "ticketflow.guardian": {
+        "type": "Project"
       }
     }
   }
