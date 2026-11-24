@@ -14,21 +14,16 @@ package guardian.gate
 
 import rego.v1
 
-# ── Extract VEX statements regardless of data nesting ──────────────────────────
-vex_statements contains s if {
-	some s in data.statements
-}
-
+# ── Extract VEX statements from data (supports direct or nested .vex) ──────────
 vex_statements contains s if {
 	some s in data.vex.statements
 }
 
 vex_statements contains s if {
-	some _, val in data
-	some s in val.statements
+	some s in data.statements
 }
 
-# ── Vulnerability ID matching helper (disjunction) ─────────────────────────────
+# ── Vulnerability ID matching helper ──────────────────────────────────────────
 vulnerability_matches(vuln, id) if {
 	vuln.name == id
 }
