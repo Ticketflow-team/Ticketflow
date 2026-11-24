@@ -28,11 +28,20 @@ vex_statements contains s if {
 	some s in val.statements
 }
 
+# ── Vulnerability ID matching helper (disjunction) ─────────────────────────────
+vulnerability_matches(vuln, id) if {
+	vuln.name == id
+}
+
+vulnerability_matches(vuln, id) if {
+	vuln.id == id
+}
+
 # ── VEX exemption check for a given ID ─────────────────────────────────────────
 vex_not_affected(id) if {
 	some s in vex_statements
 	s.status in {"not_affected", "fixed"}
-	(s.vulnerability.name == id; s.vulnerability.id == id)
+	vulnerability_matches(s.vulnerability, id)
 }
 
 # ── Check if finding or any of its aliases is exempted ─────────────────────────

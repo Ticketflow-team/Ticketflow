@@ -302,12 +302,12 @@ jobs:
           conftest verify --policy policies/gate/
       - name: Evaluate Risk Gate policy
         run: |
-          FILES_TO_TEST="findings.enriched.json"
+          files=("findings.enriched.json")
           if [ -f trivy-image.json ]; then
-            FILES_TO_TEST="findings.enriched.json trivy-image.json"
+            files+=("trivy-image.json")
           fi
-          echo "Evaluating files: $FILES_TO_TEST"
-          conftest test $FILES_TO_TEST \
+          echo "Evaluating files: ${files[*]}"
+          conftest test "${files[@]}" \
             --policy policies/gate/ \
             --data policies/vex/vex.openvex.json \
             --namespace guardian.gate
