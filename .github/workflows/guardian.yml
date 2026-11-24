@@ -59,10 +59,13 @@ jobs:
       - name: Run Gitleaks scan
         run: gitleaks detect --verbose --redact
 
-  # ── P4 : SCA — dependances NuGet vulnerables (T13) ──────────────────────────
+  # ── P8 : SCA – OSV-Scanner + dotnet list package --vulnerable (T13 / A03) ──
   sca:
-    name: SCA - NuGet Vulnerable Packages
+    name: SCA (OSV-Scanner & NuGet Audit)
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      security-events: write   # Requis pour uploader les alertes SARIF de dependances
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683        # v4.2.2
         with:
@@ -70,21 +73,39 @@ jobs:
       - uses: actions/setup-dotnet@3951f0dfe7a07e2313ec93c75700083e2005cbab    # v4.3.0
         with:
           dotnet-version: "10.0.x"
-      - name: Restore
+      - name: Restore dependencies (locked-mode — T14)
         run: dotnet restore --locked-mode
-      - name: Check vulnerable packages (block on Critical/High)
+      - name: Audit NuGet packages (dotnet list package)
         run: |
-          dotnet list package --vulnerable --include-transitive 2>&1 | tee sca-report.txt
-          if grep -qE "(Critical|High)" sca-report.txt; then
-            echo "::error::Vulnerable NuGet packages found (Critical or High). Fix before merging."
+          dotnet list package --vulnerable --include-transitive 2>&1 | tee nuget-vulnerable.txt
+          if grep -qE "(Critical|High)" nuget-vulnerable.txt; then
+            echo "::error::Vulnerable NuGet packages found in dotnet list package (Critical or High)."
             exit 1
           fi
-      - name: Upload SCA report
+      - name: Install Google OSV-Scanner
+        run: |
+          curl -sSL "https://github.com/google/osv-scanner/releases/download/v2.7.1/osv-scanner_linux_amd64" -o /usr/local/bin/osv-scanner
+          chmod +x /usr/local/bin/osv-scanner
+      - name: Run OSV-Scanner (export JSON and SARIF)
+        run: |
+          osv-scanner scan --recursive --format json . > osv-report.json || true
+          osv-scanner scan --recursive --format sarif . > osv-report.sarif || true
+          osv-scanner scan --recursive --format table .
+      - name: Upload OSV SARIF to GitHub Security tab
+        if: always()
+        uses: github/codeql-action/upload-sarif@f35333b910470a5408cb081b68f0701254a7d27b  # v3.28.18
+        with:
+          sarif_file: osv-report.sarif
+          category: osv-scanner
+      - name: Upload SCA dependency reports artifact
         if: always()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02  # v4.6.2
         with:
-          name: sca-report
-          path: sca-report.txt
+          name: sca-dependency-reports
+          path: |
+            nuget-vulnerable.txt
+            osv-report.json
+            osv-report.sarif
 
   # ── P7 : SAST – Semgrep CE & Regles maison (T01, T09, T11) ─────────────────
   sast:
@@ -107,6 +128,7 @@ jobs:
         uses: github/codeql-action/upload-sarif@f35333b910470a5408cb081b68f0701254a7d27b  # v3.28.18
         with:
           sarif_file: semgrep.sarif
+          category: semgrep
       - name: Upload SARIF artifact
         if: always()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02  # v4.6.2
