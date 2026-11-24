@@ -91,12 +91,22 @@ jobs:
           osv-scanner scan --recursive --format json . > osv-report.json || true
           osv-scanner scan --recursive --format sarif . > osv-report.sarif || true
           osv-scanner scan --recursive --format table .
+      # ── P9 : Enrichissement des findings (EPSS + CISA KEV + atteignabilite) ────
+      - name: Enrich findings with EPSS, CISA KEV, and reachability (TicketFlow.Guardian - P9)
+        run: |
+          dotnet run --project src/TicketFlow.Guardian -- enrich osv-report.json --output findings.enriched.json
       - name: Upload OSV SARIF to GitHub Security tab
         if: always()
         uses: github/codeql-action/upload-sarif@f35333b910470a5408cb081b68f0701254a7d27b  # v3.28.18
         with:
           sarif_file: osv-report.sarif
           category: osv-scanner
+      - name: Upload Enriched Findings artifact (P9 / P14 Risk Gate feed)
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02  # v4.6.2
+        with:
+          name: findings-enriched
+          path: findings.enriched.json
       - name: Upload SCA dependency reports artifact
         if: always()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02  # v4.6.2
@@ -106,6 +116,7 @@ jobs:
             nuget-vulnerable.txt
             osv-report.json
             osv-report.sarif
+            findings.enriched.json
 
   # ── P7 : SAST – Semgrep CE & Regles maison (T01, T09, T11) ─────────────────
   sast:

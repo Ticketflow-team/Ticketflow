@@ -20,6 +20,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\src\TicketFlow.Domain\TicketFlow.Domain.csproj" />
+    <ProjectReference Include="..\..\src\TicketFlow.Guardian\TicketFlow.Guardian.csproj" />
   </ItemGroup>
 
 </Project>
