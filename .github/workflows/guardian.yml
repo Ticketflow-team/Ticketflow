@@ -172,20 +172,20 @@ jobs:
           docker build -t ticketflow-api:${{ github.sha }} -f src/TicketFlow.Api/Dockerfile .
       - name: Install Trivy vulnerability scanner
         run: |
-          curl -sSL https://github.com/aquasecurity/trivy/releases/download/v0.59.1/trivy_0.59.1_Linux-64bit.tar.gz | sudo tar -xz -C /usr/local/bin trivy
+          curl -sSL https://github.com/aquasecurity/trivy/releases/download/v0.76.2/trivy_0.76.2_Linux-64bit.tar.gz | sudo tar -xz -C /usr/local/bin trivy
       - name: Run Trivy container scan (SARIF & JSON)
         run: |
           trivy image --format sarif --output trivy-image.sarif ticketflow-api:${{ github.sha }}
           trivy image --format json --output trivy-image.json ticketflow-api:${{ github.sha }}
           trivy image --severity HIGH,CRITICAL ticketflow-api:${{ github.sha }}
       - name: Upload Trivy container SARIF to GitHub Security tab
-        if: always()
+        if: always() && hashFiles('trivy-image.sarif') != ''
         uses: github/codeql-action/upload-sarif@f35333b910470a5408cb081b68f0701254a7d27b  # v3.28.18
         with:
           sarif_file: trivy-image.sarif
           category: trivy-container
       - name: Upload Container Image Security Reports
-        if: always()
+        if: always() && hashFiles('trivy-image.sarif') != ''
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02  # v4.6.2
         with:
           name: container-image-reports
