@@ -18,6 +18,14 @@ switch (commandName)
         var enrichCommand = new EnrichCommand();
         return await enrichCommand.ExecuteAsync(args);
 
+    case "cbom":
+        var cbomCommand = new CbomCommand();
+        return await cbomCommand.ExecuteAsync(args);
+
+    case "aibom":
+        var aibomCommand = new AibomCommand();
+        return await aibomCommand.ExecuteAsync(args);
+
     case "--version":
     case "-v":
         Console.WriteLine("TicketFlow.Guardian v1.0.0 (NET 10.0)");
@@ -37,6 +45,10 @@ static void PrintUsage()
     Console.WriteLine("  enrich <osv-report.json> [--output <output.json>] [--repo-root <path>]");
     Console.WriteLine("    Enriches OSV-Scanner findings with CISA KEV status, FIRST.org EPSS scores,");
     Console.WriteLine("    and codebase reachability analysis for the OPA Risk Gate (P14).");
+    Console.WriteLine("  cbom [--output <output.json>] [--repo-root <path>]");
+    Console.WriteLine("    Generates CycloneDX 1.6 Cryptography Bill of Materials (CBOM).");
+    Console.WriteLine("  aibom [--output <output.json>]");
+    Console.WriteLine("    Generates CycloneDX 1.6 AI / Machine Learning Bill of Materials (AIBOM).");
     Console.WriteLine();
     Console.WriteLine("Options:");
     Console.WriteLine("  --help, -h       Show this help message");
