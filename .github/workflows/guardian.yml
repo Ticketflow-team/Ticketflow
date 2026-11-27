@@ -306,6 +306,9 @@ jobs:
           if [ -f trivy-image.json ]; then
             files+=("trivy-image.json")
           fi
+          if [ -f src/TicketFlow.Api/packages.lock.json ]; then
+            files+=("src/TicketFlow.Api/packages.lock.json")
+          fi
           echo "Evaluating files: ${files[*]}"
           conftest test "${files[@]}" \
             --policy policies/gate/ \
