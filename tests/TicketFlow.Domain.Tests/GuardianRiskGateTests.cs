@@ -79,13 +79,13 @@ public class GuardianRiskGateTests
 
         var json = File.ReadAllText(allowlistPath);
         using var doc = JsonDocument.Parse(json);
-        var root = doc.RootElement;
+        var target = doc.RootElement.TryGetProperty("package_allowlist", out var subProp) ? subProp : doc.RootElement;
 
-        Assert.True(root.TryGetProperty("allowed_prefixes", out var prefixesProp));
+        Assert.True(target.TryGetProperty("allowed_prefixes", out var prefixesProp));
         Assert.Equal(JsonValueKind.Array, prefixesProp.ValueKind);
         Assert.True(prefixesProp.GetArrayLength() > 0);
 
-        Assert.True(root.TryGetProperty("allowed_packages", out var packagesProp));
+        Assert.True(target.TryGetProperty("allowed_packages", out var packagesProp));
         Assert.Equal(JsonValueKind.Array, packagesProp.ValueKind);
         Assert.True(packagesProp.GetArrayLength() > 0);
     }
