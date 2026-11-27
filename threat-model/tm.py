@@ -51,6 +51,9 @@ guardian.inBoundary = interne
 
 psp = Server("PSP — Prestataire de paiement (tiers)")
 psp.inBoundary = internet          # service externe, hors de notre controle
+llm_api = Server("API LLM externe (Google Gemini — gemini-4-hydrogen)")
+llm_api.inBoundary = internet      # service externe, hors de notre controle
+
 
 # ─────────────────────────────── Datastores ─────────────────────────────────
 pg = Datastore("PostgreSQL (base ticketflow)")
@@ -104,6 +107,17 @@ f09.protocol = "HTTPS"; f09.isEncrypted = True
 f10 = Dataflow(guardian, psp, "Enrichissement EPSS / CISA KEV (sources publiques)")
 f10.protocol = "HTTPS"; f10.isEncrypted = True
 f10.data = "identifiants CVE (donnees publiques)"
+
+# IA dans l'application : evaluation anti-fraude (UC9 / T26-T30)
+f11 = Dataflow(api, llm_api, "Evaluation anti-fraude / anti-scalping (signaux pseudonymises)")
+f11.protocol = "HTTPS"; f11.dstPort = 443; f11.isEncrypted = True
+f11.data = "velocite, risque IP, sequence comportementale (sans PII ni PAN)"
+
+# IA dans la pipeline : triage de securite P16 (findings expurges, revue humaine obligatoire)
+f12 = Dataflow(guardian, llm_api, "Triage IA des findings CI expurges (P16)")
+f12.protocol = "HTTPS"; f12.dstPort = 443; f12.isEncrypted = True
+f12.data = "findings.enriched.json / SARIF expurge (sans secrets ni PII)"
+
 
 if __name__ == "__main__":
     tm.process()

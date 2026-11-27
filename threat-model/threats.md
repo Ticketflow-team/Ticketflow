@@ -1,4 +1,4 @@
-# Threat Registry — TicketFlow (T01–T25)
+# Threat Registry — TicketFlow (T01–T30)
 
 **Official, curated** registry of the project's threats. Source of truth for the
 `T##` mapping referenced in the code, the pull requests (template), the DoR/DoD
@@ -58,13 +58,28 @@ and `guardian.yml`.
 | T24 | Tampering | Delivery gate | Merging an exploitable vulnerability | **Risk Gate** OPA/Conftest (KEV, EPSS ≥ 0.1, reachable, CVSS ≥ 9 without VEX) | To do | `SECURITY.md` (OPA to be implemented) |
 | T25 | Repudiation | Supply chain | No provenance / artifact traceability | SBOM (CycloneDX), SLSA provenance, artifact signing | To do | *(to be implemented)* |
 
+## AI & External LLM API (T26–T30)
+
+| ID | STRIDE | Component | Threat | Countermeasure | Status | Traceability |
+|----|--------|-----------|--------|----------------|--------|--------------|
+| T26 | Tampering | API / Guardian → Gemini API | Prompt injection (untrusted buyer behavior or malicious PR comments — LLM01) | Delimiter separation, strict JSON schema parsing, deterministic rules /
+human review decide | To do | `TicketFlow.Application`, `/tests/ai-redteam/` (`f11`, `f12`) |
+| T27 | Information disclosure | API / Guardian → Gemini API | PII, payment data, or CI secrets sent to external LLM API (LLM02) | Mandatory redaction/pseudonymization before API call; `LLM_API_KEY` only
+in `.env` / GitHub Secrets | To do | `TicketFlow.Guardian`, `Infrastructure`, `/tests/ai-redteam/` |
+| T28 | Elevation of privilege | Guardian / API → Repo / Orders | Excessive agency: AI auto-merges PR, overrides `deny.rego`, alters prices (`T02`), or skips `Idempotency-Key` (`T03`) (LLM06) | Zero
+merge permissions on CI token; deterministic C# rules make final decision | To do | `guardian.yml`, `TicketFlow.Application` |
+| T29 | Denial of service | API / Guardian → Gemini API | API outage, HTTP 429/5xx, cost spike, or malformed JSON output (LLM10 / LLM05) | HTTP timeout, token limits, retry/circuit breaker, safe
+fail-closed fallback | To do | `Infrastructure`, `TicketFlow.Guardian`, `WireMock.Net` tests |
+| T30 | Tampering | Supply chain (AI) | Unpinned model drift or undocumented third-party LLM dependency (LLM03) | Exact pinned model (`gemini-4-hydrogen`) tracked in CycloneDX 1.6 AIBOM | Partial |
+`AibomGenerator.cs`, `guardian.yml` (`sbom` job) |
+
 ---
 
 ## Code / test traceability
 
 Every **testable** threat must be covered by an xUnit abuse test named after its
 ID, e.g. `T02_ClientCannotSetThePrice`, `T03_PaymentIsIdempotentOnReplay`,
-`T07_NoTicketOverselling`. Pipeline threats (T12–T25) are verified by the
+`T07_NoTicketOverselling`. Pipeline threats (T12–T25, T28, T30) are verified by the
 `guardian.yml` jobs and the Risk Gate.
 
 Any PR touching one of these surfaces references the relevant `T##` (required by
