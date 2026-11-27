@@ -310,7 +310,7 @@ jobs:
           conftest test "${files[@]}" \
             --policy policies/gate/ \
             --data policies/vex/vex.openvex.json \
-            --data policies/gate/package_allowlist.json \
+            --data policies/allowlist/package_allowlist.json \
             --namespace guardian.gate
 
   # ── P16 / P17 : AI Security Triage Agent avec Garde-fous (T21–T23 / T28 / LLM06) ──

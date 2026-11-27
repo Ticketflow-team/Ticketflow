@@ -73,7 +73,7 @@ public class GuardianRiskGateTests
     public void PackageAllowlist_File_ExistsAndHasValidSchema()
     {
         var repoRoot = FindRepoRoot();
-        var allowlistPath = Path.Combine(repoRoot, "policies", "gate", "package_allowlist.json");
+        var allowlistPath = Path.Combine(repoRoot, "policies", "allowlist", "package_allowlist.json");
 
         Assert.True(File.Exists(allowlistPath), $"Allowlist file not found at {allowlistPath}");
 
