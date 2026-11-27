@@ -86,3 +86,56 @@ test_container_trivy_critical_denied if {
 
 	count(gate.deny) > 0 with input as trivy_input
 }
+
+# ── Test 7 : Slopsquatting (T23) — Dépendance inconnue dans lockfile => Interdiction
+test_slopsquatting_lockfile_denied if {
+	allowlist_data := {
+		"allowed_prefixes": ["Microsoft.", "System."],
+		"allowed_packages": ["Microsoft.AspNetCore.OpenApi"],
+	}
+
+	lockfile_input := {"dependencies": {"net10.0": {
+		"FakeAI.Injected.Package": {
+			"type": "Direct",
+			"resolved": "1.0.0",
+		},
+	}}}
+
+	count(gate.deny) > 0 with input as lockfile_input with data.package_allowlist as allowlist_data
+}
+
+# ── Test 8 : Dépendance autorisée dans lockfile => Acceptée ───────────────────
+test_allowed_package_lockfile_accepted if {
+	allowlist_data := {
+		"allowed_prefixes": ["Microsoft.", "System."],
+		"allowed_packages": ["Microsoft.AspNetCore.OpenApi"],
+	}
+
+	lockfile_input := {"dependencies": {"net10.0": {
+		"Microsoft.AspNetCore.OpenApi": {
+			"type": "Direct",
+			"resolved": "10.0.15",
+		},
+	}}}
+
+	count(gate.deny) == 0 with input as lockfile_input with data.package_allowlist as allowlist_data
+}
+
+# ── Test 9 : Slopsquatting dans les findings => Interdiction ─────────────────
+test_slopsquatting_finding_denied if {
+	allowlist_data := {
+		"allowed_prefixes": ["Microsoft.", "System."],
+		"allowed_packages": ["Microsoft.AspNetCore.OpenApi"],
+	}
+
+	finding_input := {"findings": [{
+		"id": "GHSA-fake-slop",
+		"package": "Untrusted.Slop.Package",
+		"version": "1.0.0",
+		"kev": false,
+		"reachable": false,
+		"epss": 0.01,
+	}]}
+
+	count(gate.deny) > 0 with input as finding_input with data.package_allowlist as allowlist_data
+}

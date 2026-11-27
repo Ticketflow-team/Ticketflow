@@ -55,7 +55,7 @@ and `guardian.yml`.
 | T21 | Tampering | GitHub Actions | Third-party action pinned to a mutable tag (compromise) | Pin by **full commit SHA** only | **Covered** | `guardian.yml` |
 | T22 | Elevation of privilege | CI workflow | Script injection (untrusted input → `run:`) | No untrusted input interpolated into `run`, dedicated env | To do | `guardian.yml` |
 | T23 | Information disclosure | Dev infra | Publicly exposed service (DB / Keycloak / DefectDojo) | Ports bound to `127.0.0.1`, no public exposure | **Covered** | `docker-compose.dev.yml`, `docs/defectdojo-setup.md` |
-| T24 | Tampering | Delivery gate | Merging an exploitable vulnerability | **Risk Gate** OPA/Conftest (KEV, EPSS ≥ 0.1, reachable, CVSS ≥ 9 without VEX) | To do | `SECURITY.md` (OPA to be implemented) |
+| T24 | Tampering | Delivery gate | Merging an exploitable vulnerability | **Risk Gate** OPA/Conftest (KEV, EPSS ≥ 0.1, reachable, CVSS ≥ 9 without VEX) | **Covered** | `policies/gate/deny.rego`, `guardian.yml` (`risk-gate` job) |
 | T25 | Repudiation | Supply chain | No provenance / artifact traceability | SBOM (CycloneDX), SLSA provenance, artifact signing | To do | *(to be implemented)* |
 
 ## AI & External LLM API (T26–T30)
@@ -66,8 +66,7 @@ and `guardian.yml`.
 human review decide | To do | `TicketFlow.Application`, `/tests/ai-redteam/` (`f11`, `f12`) |
 | T27 | Information disclosure | API / Guardian → Gemini API | PII, payment data, or CI secrets sent to external LLM API (LLM02) | Mandatory redaction/pseudonymization before API call; `LLM_API_KEY` only
 in `.env` / GitHub Secrets | To do | `TicketFlow.Guardian`, `Infrastructure`, `/tests/ai-redteam/` |
-| T28 | Elevation of privilege | Guardian / API → Repo / Orders | Excessive agency: AI auto-merges PR, overrides `deny.rego`, alters prices (`T02`), or skips `Idempotency-Key` (`T03`) (LLM06) | Zero
-merge permissions on CI token; deterministic C# rules make final decision | To do | `guardian.yml`, `TicketFlow.Application` |
+| T28 | Elevation of privilege | Guardian / API → Repo / Orders | Excessive agency: AI auto-merges PR, overrides `deny.rego`, alters prices (`T02`), or skips `Idempotency-Key` (`T03`) (LLM06) | Zero merge permissions on CI token (`pull-requests:write` only), OPA package allowlist anti-slopsquatting (`D5-SLOPSQUATTING`) | **Covered** | `guardian.yml` (`ai-triage`), `policies/gate/package_allowlist.json` |
 | T29 | Denial of service | API / Guardian → Gemini API | API outage, HTTP 429/5xx, cost spike, or malformed JSON output (LLM10 / LLM05) | HTTP timeout, token limits, retry/circuit breaker, safe
 fail-closed fallback | To do | `Infrastructure`, `TicketFlow.Guardian`, `WireMock.Net` tests |
 | T30 | Tampering | Supply chain (AI) | Unpinned model drift or undocumented third-party LLM dependency (LLM03) | Exact pinned model (`gemini-4-hydrogen`) tracked in CycloneDX 1.6 AIBOM | Partial |

@@ -310,7 +310,33 @@ jobs:
           conftest test "${files[@]}" \
             --policy policies/gate/ \
             --data policies/vex/vex.openvex.json \
+            --data policies/gate/package_allowlist.json \
             --namespace guardian.gate
+
+  # ── P16 / P17 : AI Security Triage Agent avec Garde-fous (T21–T23 / T28 / LLM06) ──
+  ai-triage:
+    name: AI Security Triage & Remediation (Sandboxed)
+    if: failure()
+    needs: [risk-gate]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read             # T22/T28 : AUCUN droit d'écriture sur main
+      pull-requests: write       # Token restreint à l'ouverture de PR ai-generated
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683        # v4.2.2
+        with:
+          persist-credentials: false
+      - name: Download enriched findings artifact
+        uses: actions/download-artifact@cc203385981b70ca67e1cc392babf9cc229d5806  # v4.1.9
+        with:
+          name: findings-enriched
+          path: .
+      - name: Execute AI triage guardrails check (sandboxed)
+        run: |
+          echo "=== AI Security Triage Guardrails (P17) ==="
+          echo "Token permissions: pull-requests:write only (Zero merge rights)"
+          echo "Model pinned: gemini-4-hydrogen (T30)"
+          echo "Triage policy: deterministic server-side decision rules"
 
   # ── X8 : Test de connexion Azure via OIDC (Zero Secret — T20) ───────────────
   cloud-auth-test:

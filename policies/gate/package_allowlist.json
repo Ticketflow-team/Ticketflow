@@ -1,0 +1,35 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "version": "1.0.0",
+  "description": "TicketFlow Approved Package Allowlist (T23/LLM03 Anti-Slopsquatting Guardrail)",
+  "allowed_prefixes": [
+    "Microsoft.",
+    "System.",
+    "Npgsql",
+    "xunit",
+    "coverlet.",
+    "StackExchange.Redis",
+    "Serilog",
+    "QRCoder",
+    "TicketFlow.",
+    "Google.GenAI",
+    "Google.Apis"
+  ],
+  "allowed_packages": [
+    "Microsoft.AspNetCore.OpenApi",
+    "Microsoft.OpenApi",
+    "Microsoft.NET.Test.Sdk",
+    "coverlet.collector",
+    "xunit",
+    "xunit.runner.visualstudio",
+    "Npgsql",
+    "Npgsql.EntityFrameworkCore.PostgreSQL",
+    "Microsoft.EntityFrameworkCore",
+    "Microsoft.EntityFrameworkCore.Design",
+    "StackExchange.Redis",
+    "QRCoder",
+    "Serilog",
+    "Serilog.AspNetCore",
+    "Serilog.Sinks.Console"
+  ]
+}

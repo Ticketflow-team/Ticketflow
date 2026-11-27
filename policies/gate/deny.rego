@@ -1,4 +1,4 @@
-# ── P14 : Risk Gate — OPA / Conftest Policy ─────────────────────────────────
+# ── P14 & P17 : Risk Gate & Agent Guardrails — OPA / Conftest Policy ─────────
 # Package: guardian.gate
 #
 # Innovating beyond raw CVSS: Prioritize by real-world threat:
@@ -6,6 +6,7 @@
 #   D2 — Reachable in code AND EPSS >= 0.10 (10% daily exploitation chance) => Block
 #   D3 — Reachable in code AND CVSS >= 9.0 (Critical fallback) => Block
 #   D4 — Container image (Trivy) CRITICAL vulnerability => Block
+#   D5 — Slopsquatting / Hallucinated package (T23 / LLM03) outside allowlist => Block
 #
 # Exemptions:
 #   OpenVEX statements with status "not_affected" or "fixed" exempt findings.
@@ -49,6 +50,32 @@ finding_is_vex_exempt(f) if {
 	vex_not_affected(alias)
 }
 
+# ── Extract Approved Packages & Prefixes (T23 / LLM03 Anti-Slopsquatting) ──────
+allowed_packages contains pkg if {
+	some pkg in data.package_allowlist.allowed_packages
+}
+
+allowed_packages contains pkg if {
+	some pkg in data.allowed_packages
+}
+
+allowed_prefixes contains prefix if {
+	some prefix in data.package_allowlist.allowed_prefixes
+}
+
+allowed_prefixes contains prefix if {
+	some prefix in data.allowed_prefixes
+}
+
+is_allowed_package(pkg_name) if {
+	pkg_name in allowed_packages
+}
+
+is_allowed_package(pkg_name) if {
+	some prefix in allowed_prefixes
+	startswith(pkg_name, prefix)
+}
+
 # ── D1 : CISA KEV (Known Exploited Vulnerabilities) ───────────────────────────
 deny contains msg if {
 	some f in input.findings
@@ -82,6 +109,25 @@ deny contains msg if {
 	vuln.Severity == "CRITICAL"
 	not vex_not_affected(vuln.VulnerabilityID)
 	msg := sprintf("[D4-CONTAINER] Image conteneur : %s dans %s est CRITICAL.", [vuln.VulnerabilityID, vuln.PkgName])
+}
+
+# ── D5 : Anti-Slopsquatting (T23 / LLM03) — Lockfile package verification ───────
+deny contains msg if {
+	count(allowed_prefixes) > 0
+	some target_framework, pkgs in input.dependencies
+	some pkg_name, pkg_info in pkgs
+	pkg_info.type in {"Direct", "Transitive"}
+	not is_allowed_package(pkg_name)
+	msg := sprintf("[D5-SLOPSQUATTING] Dependance non autorisee detectee (%s) : '%s'. Risque de package hallucine / slopsquatting (T23 / LLM03).", [target_framework, pkg_name])
+}
+
+# ── D5b : Anti-Slopsquatting on Findings (e.g. proposed or detected) ───────────
+deny contains msg if {
+	count(allowed_prefixes) > 0
+	some f in input.findings
+	f.package != ""
+	not is_allowed_package(f.package)
+	msg := sprintf("[D5-SLOPSQUATTING] Package '%s' dans les findings n'est pas dans l'allowlist approuvee (T23 / LLM03).", [f.package])
 }
 
 # ── W1 : High EPSS but NOT reachable (Monitoring only) ─────────────────────────
