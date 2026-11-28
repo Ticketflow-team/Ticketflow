@@ -38,6 +38,8 @@ public class GuardianRiskGateTests
         Assert.Contains("vex_not_affected", content);
         Assert.Contains("D1-KEV", content);
         Assert.Contains("D2-EPSS", content);
+        Assert.Contains("D5-SLOPSQUATTING", content);
+        Assert.Contains("is_allowed_package", content);
     }
 
     [Fact]
@@ -68,6 +70,27 @@ public class GuardianRiskGateTests
     }
 
     [Fact]
+    public void PackageAllowlist_File_ExistsAndHasValidSchema()
+    {
+        var repoRoot = FindRepoRoot();
+        var allowlistPath = Path.Combine(repoRoot, "policies", "allowlist", "package_allowlist.json");
+
+        Assert.True(File.Exists(allowlistPath), $"Allowlist file not found at {allowlistPath}");
+
+        var json = File.ReadAllText(allowlistPath);
+        using var doc = JsonDocument.Parse(json);
+        var target = doc.RootElement.TryGetProperty("package_allowlist", out var subProp) ? subProp : doc.RootElement;
+
+        Assert.True(target.TryGetProperty("allowed_prefixes", out var prefixesProp));
+        Assert.Equal(JsonValueKind.Array, prefixesProp.ValueKind);
+        Assert.True(prefixesProp.GetArrayLength() > 0);
+
+        Assert.True(target.TryGetProperty("allowed_packages", out var packagesProp));
+        Assert.Equal(JsonValueKind.Array, packagesProp.ValueKind);
+        Assert.True(packagesProp.GetArrayLength() > 0);
+    }
+
+    [Fact]
     public void DenyTestRego_UnitTests_Exist()
     {
         var repoRoot = FindRepoRoot();
@@ -79,5 +102,7 @@ public class GuardianRiskGateTests
         Assert.Contains("test_empty_findings_allowed", content);
         Assert.Contains("test_kev_finding_denied", content);
         Assert.Contains("test_epss_reachable_denied", content);
+        Assert.Contains("test_slopsquatting_lockfile_denied", content);
+        Assert.Contains("test_allowed_package_lockfile_accepted", content);
     }
 }
