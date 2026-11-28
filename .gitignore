@@ -489,3 +489,5 @@ defectdojo/
 threat-model/out/
 threat-model/__pycache__/
 .venv-tm/
+.venv-redteam/
+tests/ai-redteam/out/
